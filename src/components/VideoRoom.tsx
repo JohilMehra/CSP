@@ -14,8 +14,10 @@ import type {
 
 const VideoRoom: React.FC<{ channel?: string }> = ({ channel }) => {
   // ✅ Load from environment safely with fallback values
-  const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID || '';
-  const token = process.env.NEXT_PUBLIC_AGORA_TEMP_TOKEN || null;
+  // ⚡ Hard-coded App ID for guaranteed demo success
+    const appId = "0069aabe1cdc46c6aa3891d1113d1fd7";   // Example: "a1b2c3d4e5f6g7h8i9..."
+    const token = null;                             // testing mode = no token needed
+
   const safeChannel = channel || 'study-room-1'; // fallback if undefined
 
   const localContainerRef = useRef<HTMLDivElement>(null);
@@ -75,36 +77,43 @@ const VideoRoom: React.FC<{ channel?: string }> = ({ channel }) => {
   }, []);
 
   // ✅ Safe join handler with validation
-  const handleJoin = async () => {
-    if (!appId) {
-      alert('Agora App ID is missing! Please check your .env.local file.');
-      console.error('[Agora] Missing App ID. Stopping join process.');
-      return;
-    }
+ // ✅ debug and join handler - paste into src/components/VideoRoom.tsx
+const handleJoin = async () => {
+  // debug: show what appId and token are in the browser runtime
+  console.log('[DEBUG] App ID from code:', appId);
+  console.log('[DEBUG] Token from code:', token);
+  console.log('[DEBUG] Channel (safeChannel):', safeChannel);
 
-    if (!safeChannel) {
-      alert('Channel name missing!');
-      console.error('[Agora] Channel name is missing.');
-      return;
-    }
+  if (!appId) {
+    alert('Agora App ID is missing! Please check your .env.local file.');
+    console.error('[Agora] Missing App ID. Stopping join process.');
+    return;
+  }
 
-    try {
-      console.log('[Agora] Joining channel:', safeChannel, 'with App ID:', appId);
-      await joinChannel({ appId, channel: safeChannel, token });
-      const { localVideoTrack } = getLocalTracks();
-      if (localVideoTrack && localContainerRef.current) {
-        localVideoTrack.play(localContainerRef.current);
-      }
-      setIsJoined(true);
-      console.log('[Agora] Successfully joined channel:', safeChannel);
-    } catch (err: any) {
-      console.error('[Agora] Join failed:', err);
-      alert(
-        'Failed to join Agora channel.\n' +
-          'Please verify App ID, mode (Testing), and .env.local file.'
-      );
+  if (!safeChannel) {
+    alert('Channel name missing!');
+    console.error('[Agora] Channel name is missing.');
+    return;
+  }
+
+  try {
+    console.log('[Agora] Joining channel:', safeChannel, 'with App ID:', appId);
+    await joinChannel({ appId, channel: safeChannel, token });
+    const { localVideoTrack } = getLocalTracks();
+    if (localVideoTrack && localContainerRef.current) {
+      localVideoTrack.play(localContainerRef.current);
     }
-  };
+    setIsJoined(true);
+    console.log('[Agora] Successfully joined channel:', safeChannel);
+  } catch (err: any) {
+    console.error('[Agora] Join failed:', err);
+    alert(
+      'Failed to join Agora channel.\n' +
+        'Please verify App ID, mode (Testing), and .env.local file.'
+    );
+  }
+};
+
 
   const handleLeave = async () => {
     try {

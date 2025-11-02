@@ -4,7 +4,7 @@ const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '
 
 export const generateQuiz = async (topic: string, difficulty: string, numQuestions: number = 5) => {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     
     const prompt = `Generate a ${difficulty} difficulty quiz about "${topic}" with exactly ${numQuestions} multiple choice questions. 
     Format the response as JSON with the following structure:
@@ -39,7 +39,7 @@ export const generateQuiz = async (topic: string, difficulty: string, numQuestio
 
 export const generateSolution = async (question: string, userAnswer: string) => {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     
     const prompt = `Given this question: "${question}" and the user's answer: "${userAnswer}", 
     provide a detailed explanation and solution. If the answer is wrong, explain the correct approach.`;
@@ -55,7 +55,7 @@ export const generateSolution = async (question: string, userAnswer: string) => 
 
 export const generateStudyTips = async (topic: string, difficulty: string) => {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     
     const prompt = `Generate ${difficulty} level study tips and tricks for "${topic}". 
     Include important concepts, common mistakes to avoid, and practice strategies. Keep it concise and actionable.`;

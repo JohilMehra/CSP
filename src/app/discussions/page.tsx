@@ -1,77 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  BookOpen, 
+import {
+  BookOpen,
   MessageSquare,
   Plus,
   Search,
   ThumbsUp,
   TrendingUp,
   Clock,
-  Filter,
   Pin
 } from 'lucide-react';
 import { formatRelativeTime } from '@/utils/dateUtils';
 
-const mockThreads = [
-  {
-    id: '1',
-    title: 'How to approach OOP design patterns effectively?',
-    content: 'I\'m struggling with understanding design patterns. What\'s the best way to learn and apply them in real projects?',
-    topic: 'Software Engineering',
-    author: 'John Doe',
-    replies: 24,
-    upvotes: 156,
-    views: 450,
-    pinned: true,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    lastActive: new Date(Date.now() - 30 * 60 * 1000)
-  },
-  {
-    id: '2',
-    title: 'Thread safety in concurrent programming',
-    content: 'Can someone explain the difference between synchronized blocks and ReentrantLock? When should I use which?',
-    topic: 'Operating Systems',
-    author: 'Sarah Chen',
-    replies: 18,
-    upvotes: 89,
-    views: 234,
-    pinned: false,
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    lastActive: new Date(Date.now() - 15 * 60 * 1000)
-  },
-  {
-    id: '3',
-    title: 'Best resources for JEE Mathematics prep',
-    content: 'Looking for recommendations on books, online courses, and practice materials for JEE Main Mathematics.',
-    topic: 'JEE Preparation',
-    author: 'Alex Kumar',
-    replies: 42,
-    upvotes: 203,
-    views: 678,
-    pinned: false,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000)
-  },
-];
-
 export default function DiscussionsPage() {
+  const [threads, setThreads] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('trending');
+  const [loading, setLoading] = useState(true);
 
-  const sortedThreads = [...mockThreads].sort((a, b) => {
+  // ✅ Fetch threads dynamically from API
+  useEffect(() => {
+    async function fetchThreads() {
+      try {
+        const res = await fetch('/api/discussions', { cache: 'no-store' });
+        const data = await res.json();
+        setThreads(data);
+      } catch (error) {
+        console.error('Error fetching threads:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchThreads();
+  }, []);
+
+  const sortedThreads = [...threads].sort((a, b) => {
     if (sortBy === 'trending') return b.upvotes - a.upvotes;
-    if (sortBy === 'recent') return b.createdAt.getTime() - a.createdAt.getTime();
+    if (sortBy === 'recent') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     if (sortBy === 'replies') return b.replies - a.replies;
     return 0;
   });
 
-  const filteredThreads = sortedThreads.filter(thread => {
-    return thread.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           thread.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           thread.topic.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredThreads = sortedThreads.filter((thread) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      thread.title.toLowerCase().includes(q) ||
+      thread.content.toLowerCase().includes(q) ||
+      thread.topic.toLowerCase().includes(q)
+    );
   });
 
   return (
@@ -86,25 +64,15 @@ export default function DiscussionsPage() {
                 <span className="text-xl font-bold text-gray-900">StudySync</span>
               </Link>
               <div className="hidden md:flex space-x-4">
-                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-4 font-medium">
-                  Dashboard
-                </Link>
-                <Link href="/sessions" className="text-gray-600 hover:text-gray-900 px-3 py-4 font-medium">
-                  Sessions
-                </Link>
-                <Link href="/rooms" className="text-gray-600 hover:text-gray-900 px-3 py-4 font-medium">
-                  Exam Rooms
-                </Link>
-                <Link href="/quizzes" className="text-gray-600 hover:text-gray-900 px-3 py-4 font-medium">
-                  Quizzes
-                </Link>
-                <Link href="/discussions" className="text-blue-600 border-b-2 border-blue-600 px-3 py-4 font-medium">
-                  Discussions
-                </Link>
+                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-4 font-medium">Dashboard</Link>
+                <Link href="/sessions" className="text-gray-600 hover:text-gray-900 px-3 py-4 font-medium">Sessions</Link>
+                <Link href="/rooms" className="text-gray-600 hover:text-gray-900 px-3 py-4 font-medium">Exam Rooms</Link>
+                <Link href="/quizzes" className="text-gray-600 hover:text-gray-900 px-3 py-4 font-medium">Quizzes</Link>
+                <Link href="/discussions" className="text-blue-600 border-b-2 border-blue-600 px-3 py-4 font-medium">Discussions</Link>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Link 
+              <Link
                 href="/discussions/new"
                 className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors flex items-center space-x-2"
               >
@@ -154,16 +122,18 @@ export default function DiscussionsPage() {
         </div>
 
         {/* Threads List */}
-        <div className="space-y-4">
-          {filteredThreads.map((thread) => (
-            <ThreadCard key={thread.id} thread={thread} />
-          ))}
-        </div>
-
-        {filteredThreads.length === 0 && (
+        {loading ? (
+          <div className="text-center py-12 text-gray-500">Loading discussions...</div>
+        ) : filteredThreads.length === 0 ? (
           <div className="text-center py-12">
             <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 text-lg">No discussions found</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredThreads.map((thread) => (
+              <ThreadCard key={thread.id} thread={thread} />
+            ))}
           </div>
         )}
       </div>
@@ -171,12 +141,14 @@ export default function DiscussionsPage() {
   );
 }
 
-function ThreadCard({ thread }: { thread: typeof mockThreads[0] }) {
+function ThreadCard({ thread }: { thread: any }) {
   return (
     <Link href={`/discussions/${thread.id}`} className="block group">
-      <div className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-lg transition-all duration-200 ${
-        thread.pinned ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'
-      }`}>
+      <div
+        className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-lg transition-all duration-200 ${
+          thread.pinned ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'
+        }`}
+      >
         <div className="p-6">
           <div className="flex items-start space-x-4">
             {/* Upvotes */}
@@ -190,24 +162,18 @@ function ThreadCard({ thread }: { thread: typeof mockThreads[0] }) {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-2">
-                {thread.pinned && (
-                  <Pin className="w-4 h-4 text-yellow-600" />
-                )}
+                {thread.pinned && <Pin className="w-4 h-4 text-yellow-600" />}
                 <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
                   {thread.topic}
                 </span>
-                {thread.upvotes > 100 && (
-                  <TrendingUp className="w-4 h-4 text-orange-500" />
-                )}
+                {thread.upvotes > 100 && <TrendingUp className="w-4 h-4 text-orange-500" />}
               </div>
-              
+
               <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                 {thread.title}
               </h3>
-              
-              <p className="text-gray-600 mb-4 line-clamp-2">
-                {thread.content}
-              </p>
+
+              <p className="text-gray-600 mb-4 line-clamp-2">{thread.content}</p>
 
               {/* Meta */}
               <div className="flex items-center justify-between">
@@ -218,7 +184,7 @@ function ThreadCard({ thread }: { thread: typeof mockThreads[0] }) {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{formatRelativeTime(thread.createdAt)}</span>
+                    <span>{formatRelativeTime(new Date(thread.createdAt))}</span>
                   </div>
                 </div>
 
