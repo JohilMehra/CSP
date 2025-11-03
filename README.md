@@ -135,12 +135,15 @@ MIT License
 
 ## 👥 Contributors
 
-Built with ❤️ by the StudySync team
-
+Built with ❤️ by the team outliers.
+1.Johil Mehra.
+2.Rathod Dinesh.
+3.Nasir Hassan.
+4.Mudasir Amin.
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📞 Support
 
-For support, email support@studysync.dev or open an issue in the repository.
+For support open an issue in the repository.
